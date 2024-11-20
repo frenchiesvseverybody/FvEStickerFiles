@@ -1,0 +1,345 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2487.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;html&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://aframe.io/releases/1.5.0/aframe.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://unpkg.com/aframe-chromakey-material/dist/aframe-chromakey-material.min.js"&gt;&lt;/script&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;link rel="stylesheet" href="index.css" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pinchScaleComponent = {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>schema: {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>min: { default: 0.33 },</p>
+<p class="p1"><span class="Apple-converted-space">          </span>max: { default: 3 },</p>
+<p class="p1"><span class="Apple-converted-space">          </span>scale: { default: 0 }, // If scale is set to zero here, the object's initial scale is used.</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>init() {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const s = this.data.scale;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.initialScale =</p>
+<p class="p1"><span class="Apple-converted-space">            </span>(s &amp;&amp; { x: s, y: s, z: s }) || this.el.object3D.scale.clone();</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.scaleFactor = 1;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.handleEvent = this.handleEvent.bind(this);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.el.sceneEl.addEventListener("twofingermove", this.handleEvent);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.el.classList.add("cantap"); // Needs "objects: .cantap" attribute on raycaster.</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>remove() {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.el.sceneEl.removeEventListener(</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"twofingermove",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.handleEvent</p>
+<p class="p1"><span class="Apple-converted-space">          </span>);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>handleEvent(event) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.scaleFactor *=</p>
+<p class="p1"><span class="Apple-converted-space">            </span>1 + event.detail.spreadChange / event.detail.startSpread;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.scaleFactor = Math.min(</p>
+<p class="p1"><span class="Apple-converted-space">            </span>Math.max(this.scaleFactor, this.data.min),</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.data.max</p>
+<p class="p1"><span class="Apple-converted-space">          </span>);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.el.object3D.scale.x = this.scaleFactor * this.initialScale.x;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.el.object3D.scale.y = this.scaleFactor * this.initialScale.y;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.el.object3D.scale.z = this.scaleFactor * this.initialScale.z;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const gestureDetectorComponent = {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>schema: {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>element: { default: "" },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>init() {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.targetElement =</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.data.element &amp;&amp; document.querySelector(this.data.element);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (!this.targetElement) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.targetElement = this.el;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.internalState = {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>previousState: null,</p>
+<p class="p1"><span class="Apple-converted-space">          </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.emitGestureEvent = this.emitGestureEvent.bind(this);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.targetElement.addEventListener(</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"touchstart",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.emitGestureEvent</p>
+<p class="p1"><span class="Apple-converted-space">          </span>);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.targetElement.addEventListener(</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"touchend",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.emitGestureEvent</p>
+<p class="p1"><span class="Apple-converted-space">          </span>);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.targetElement.addEventListener(</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"touchmove",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.emitGestureEvent</p>
+<p class="p1"><span class="Apple-converted-space">          </span>);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>remove() {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.targetElement.removeEventListener(</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"touchstart",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.emitGestureEvent</p>
+<p class="p1"><span class="Apple-converted-space">          </span>);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.targetElement.removeEventListener(</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"touchend",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.emitGestureEvent</p>
+<p class="p1"><span class="Apple-converted-space">          </span>);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>this.targetElement.removeEventListener(</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"touchmove",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.emitGestureEvent</p>
+<p class="p1"><span class="Apple-converted-space">          </span>);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>emitGestureEvent(event) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const currentState = this.getTouchState(event);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const { previousState } = this.internalState;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>const gestureContinues =</p>
+<p class="p1"><span class="Apple-converted-space">            </span>previousState &amp;&amp;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>currentState &amp;&amp;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>currentState.touchCount == previousState.touchCount;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>const gestureEnded = previousState &amp;&amp; !gestureContinues;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const gestureStarted = currentState &amp;&amp; !gestureContinues;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (gestureEnded) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const eventName = `${this.getEventPrefix(</p>
+<p class="p1"><span class="Apple-converted-space">              </span>previousState.touchCount</p>
+<p class="p1"><span class="Apple-converted-space">            </span>)}fingerend`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.el.emit(eventName, previousState);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.internalState.previousState = null;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (gestureStarted) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>currentState.startTime = performance.now();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>currentState.startPosition = currentState.position;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>currentState.startSpread = currentState.spread;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const eventName = `${this.getEventPrefix(</p>
+<p class="p1"><span class="Apple-converted-space">              </span>currentState.touchCount</p>
+<p class="p1"><span class="Apple-converted-space">            </span>)}fingerstart`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.el.emit(eventName, currentState);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.internalState.previousState = currentState;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (gestureContinues) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const eventDetail = {</p>
+<p class="p1"><span class="Apple-converted-space">              </span>positionChange: {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>x: currentState.position.x - previousState.position.x,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>y: currentState.position.y - previousState.position.y,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (currentState.spread) {</p>
+<p class="p1"><span class="Apple-converted-space">              </span>eventDetail.spreadChange =</p>
+<p class="p1"><span class="Apple-converted-space">                </span>currentState.spread - previousState.spread;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Update state with new data</p>
+<p class="p1"><span class="Apple-converted-space">            </span>Object.assign(previousState, currentState);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Add state data to event detail</p>
+<p class="p1"><span class="Apple-converted-space">            </span>Object.assign(eventDetail, previousState);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const eventName = `${this.getEventPrefix(</p>
+<p class="p1"><span class="Apple-converted-space">              </span>currentState.touchCount</p>
+<p class="p1"><span class="Apple-converted-space">            </span>)}fingermove`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>this.el.emit(eventName, eventDetail);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>getTouchState(event) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (event.touches.length == 0) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return null;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>// Convert event.touches to an array so we can use reduce</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const touchList = [];</p>
+<p class="p1"><span class="Apple-converted-space">          </span>for (let i = 0; i &lt; event.touches.length; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>touchList.push(event.touches[i]);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>const touchState = {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>touchCount: touchList.length,</p>
+<p class="p1"><span class="Apple-converted-space">          </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// Calculate center of all current touches</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const centerPositionRawX =</p>
+<p class="p1"><span class="Apple-converted-space">            </span>touchList.reduce((sum, touch) =&gt; sum + touch.clientX, 0) /</p>
+<p class="p1"><span class="Apple-converted-space">            </span>touchList.length;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const centerPositionRawY =</p>
+<p class="p1"><span class="Apple-converted-space">            </span>touchList.reduce((sum, touch) =&gt; sum + touch.clientY, 0) /</p>
+<p class="p1"><span class="Apple-converted-space">            </span>touchList.length;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>touchState.positionRaw = {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>x: centerPositionRawX,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>y: centerPositionRawY,</p>
+<p class="p1"><span class="Apple-converted-space">          </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// Scale touch position and spread by average of window dimensions</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const screenScale = 2 / (window.innerWidth + window.innerHeight);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>touchState.position = {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>x: centerPositionRawX * screenScale,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>y: centerPositionRawY * screenScale,</p>
+<p class="p1"><span class="Apple-converted-space">          </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// Calculate average spread of touches from the center point</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (touchList.length &gt;= 2) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const spread =</p>
+<p class="p1"><span class="Apple-converted-space">              </span>touchList.reduce(</p>
+<p class="p1"><span class="Apple-converted-space">                </span>(sum, touch) =&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>sum +</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>Math.sqrt(</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Math.pow(centerPositionRawX - touch.clientX, 2) +</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>Math.pow(centerPositionRawY - touch.clientY, 2)</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>),</p>
+<p class="p1"><span class="Apple-converted-space">                </span>0</p>
+<p class="p1"><span class="Apple-converted-space">              </span>) / touchList.length;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>touchState.spread = spread * screenScale;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>return touchState;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>getEventPrefix(touchCount) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const numberNames = ["one", "two", "three", "many"];</p>
+<p class="p1"><span class="Apple-converted-space">          </span>return numberNames[Math.min(touchCount, 4) - 1];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>////******SECTION FOR CHANGING THE URL*****////</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const changeTheExternalUrl = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>////You should copy and paste your desired URL into the section 'externalURL' (line 206) below that you see an URL.</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const externalURL = "https://www.frenchiesvseverybody.com/shrooms/?ref=FBRNVS";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return externalURL;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>////******SECTION FOR CHANGING THE URL*****////</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const playVideoComponent = {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>schema: {</p>
+<p class="p1"><span class="Apple-converted-space">              </span>video: { type: "string" },</p>
+<p class="p1"><span class="Apple-converted-space">              </span>thumb: { type: "string" },</p>
+<p class="p1"><span class="Apple-converted-space">              </span>canstop: { type: "bool" },</p>
+<p class="p1"><span class="Apple-converted-space">          </span>},</p>
+<p class="p1"><span class="Apple-converted-space">          </span>init() {</p>
+<p class="p1"><span class="Apple-converted-space">              </span>const v = document.querySelector(this.data.video);</p>
+<p class="p1"><span class="Apple-converted-space">              </span>const p = this.data.thumb &amp;&amp; document.querySelector(this.data.thumb);</p>
+<p class="p1"><span class="Apple-converted-space">              </span>const directButton = document.getElementById("start-button-id");</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>directButton.addEventListener("click", () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>const URL = changeTheExternalUrl();</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>window.location.href = `${URL}`;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>const el = this.el;</p>
+<p class="p1">setTimeout(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>directButton.style.display = "block";</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>}, 50000); // THIS IS HOW TO CHANGE TIME DEALAY FOR BUTTON IN MILISECONDS</p>
+<p class="p1"><span class="Apple-converted-space">              </span>// Set thumbnail with flat material</p>
+<p class="p1"><span class="Apple-converted-space">              </span>if (p) {</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>el.setAttribute("material", "src", p);</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>el.setAttribute("shader", "flat");</p>
+<p class="p1"><span class="Apple-converted-space">              </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>el.setAttribute("material", "src", v);</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>el.setAttribute("shader", "chromakey");</p>
+<p class="p1"><span class="Apple-converted-space">              </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>el.setAttribute("class", "cantap");</p>
+<p class="p1"><span class="Apple-converted-space">              </span>el.setAttribute("color", "0.1 0.9 0.2");</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>let playing = false;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>el.sceneEl.addEventListener("touchstart", () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>if (!playing) {</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>el.setAttribute("material", "src", v);</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>el.setAttribute("shader", "chromakey");</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>v.play();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                      </span>v.addEventListener("ended", () =&gt; {</p>
+<p class="p2"><span class="Apple-converted-space">                         </span></p>
+<p class="p1"><span class="Apple-converted-space">                          </span>if (p) {</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>el.setAttribute("material", "src", p);</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>el.setAttribute("shader", "flat");</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>playing = false;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                      </span>playing = true;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>} else if (this.data.canstop) {</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>if (p) {</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>el.setAttribute("material", "src", p);</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>el.setAttribute("shader", "flat");</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>v.pause();</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>playing = false;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>});</p>
+<p class="p1"><span class="Apple-converted-space">          </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>AFRAME.registerComponent("play-video-component", playVideoComponent);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>AFRAME.registerComponent("gesture-detector", gestureDetectorComponent);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>AFRAME.registerComponent("pinch-scale", pinchScaleComponent);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;img</p>
+<p class="p1"><span class="Apple-converted-space">      </span>class="start-button"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>id="start-button-id"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>src="https://cdn.glitch.global/dbdc20ba-30a7-4e5a-84e3-286f21caac50/black-7252948_960_720%20copy.png?v=1727746637791"</p>
+<p class="p1"><span class="Apple-converted-space">    </span>/&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;a-scene</p>
+<p class="p1"><span class="Apple-converted-space">      </span>mindar-image="imageTargetSrc: https://cdn.glitch.global/d62d2ddf-c62d-455a-9c7f-b856d25a7604/Smaller_target.mind?v=1726588016299"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color-space="sRGB"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>renderer="colorManagement: true, physicallyCorrectLights;"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vr-mode-ui="enabled: false"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>device-orientation-permission-ui="enabled: false"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>gesture-detector</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;a-assets&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;img</p>
+<p class="p1"><span class="Apple-converted-space">          </span>id="dog-thumb"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>src="https://cdn.glitch.global/d62d2ddf-c62d-455a-9c7f-b856d25a7604/transparent_Frenchie_thumbnail_2.png?v=1726643054000"</p>
+<p class="p1"><span class="Apple-converted-space">        </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;a-asset-item</p>
+<p class="p1"><span class="Apple-converted-space">          </span>id="avatarModel"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/softmind/scene.gltf"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&gt;&lt;/a-asset-item&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;!--******SECTION FOR CHANGING THE VIDEO*****////--&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;!--////You should copy and paste your desired video URL that you uploaded in the 'Assets' folder into the section 'src' below that you see a video URL--&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;video</p>
+<p class="p1"><span class="Apple-converted-space">          </span>src="https://cdn.glitch.global/5b69ee4e-f3c6-4def-a772-3353d4a600ae/Sticker%20(1).mp4?v=1728229343000"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>id="dog-video"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>autoplay</p>
+<p class="p1"><span class="Apple-converted-space">          </span>crossorigin="anonymous"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>loop="false"</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&gt;&lt;/video&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!--******SECTION FOR CHANGING THE VIDEO*****////--&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/a-assets&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;a-camera</p>
+<p class="p1"><span class="Apple-converted-space">        </span>position="0 0 0"</p>
+<p class="p1"><span class="Apple-converted-space">        </span>look-controls="enabled: false"</p>
+<p class="p1"><span class="Apple-converted-space">        </span>raycaster="objects: .cantap"</p>
+<p class="p1"><span class="Apple-converted-space">        </span>cursor="fuse: false; rayOrigin: mouse;"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&gt;&lt;/a-camera&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;a-entity mindar-image-target="targetIndex: 0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;a-video</p>
+<p class="p1"><span class="Apple-converted-space">          </span>pinch-scale<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>width="2" height="2.5" position="0 0.19 0"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>play-video-component="video: #dog-video;<span class="Apple-converted-space">  </span>thumb: #dog-thumb; canstop: true"</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&gt;&lt;/a-video&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/a-entity&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/a-scene&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
